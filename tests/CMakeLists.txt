@@ -17,7 +17,7 @@ include_directories(${GTEST_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/src)
 add_executable(${This} ${Sources})
 
 # Link the test executable with the Google Test framework and 
-target_link_libraries(${This} ${GTEST_BOTH_LIBRARIES} ${OPENSSL_LIBRARIES})
+target_link_libraries(${This} ${GTEST_BOTH_LIBRARIES} ${OPENSSL_LIBRARIES} OrderBookLib)
 
 link_directories(${OPENSSL_LIB_DIR})
 # Add the test directory to the CTest configuration
