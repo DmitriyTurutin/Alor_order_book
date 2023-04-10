@@ -15,7 +15,7 @@ find_package(OpenSSL REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS} ${OPENSSL_INCLUDE_DIR})
 
 # Add executable
-add_executable(my_project main.cpp)
+add_executable(my_project src/main.cpp src/OrderBook.cpp src/OrderBook.h src/SSL_Client.cpp src/SSL_Client.h)
 
 # Link Boost and OpenSSL libraries to the executable
 target_link_libraries(my_project ${Boost_LIBRARIES} ${OPENSSL_LIBRARIES})
