@@ -1,4 +1,6 @@
 #include <iostream>
+#include <chrono>
+#include <thread>
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 
@@ -62,19 +64,20 @@ public:
             while (true) {
                 // Read the stream message
                 boost::asio::streambuf stream_buf;
-                boost::asio::read(m_ssl_socket, stream_buf, boost::asio::transfer_at_least(1));
+                boost::asio::read(m_ssl_socket, stream_buf, boost::asio::transfer_exactly(2219));
                 std::stringstream ss;
                 ss << &stream_buf;
                 std::string message = ss.str();
 
                 // Print the message
-                std::cout << "Stream message: " << message << std::endl;
+                std::cout << "Stream message: " << message << std::endl << std::endl << std::endl << std::endl;
             }
         } catch (const boost::system::system_error& e) {
             std::cerr << "Error reading stream: " << e.what() << std::endl;
             throw;
         }
     }
+
 
 private:
     std::string m_host;
