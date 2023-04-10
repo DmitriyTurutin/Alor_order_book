@@ -63,11 +63,56 @@ public:
         try {
             while (true) {
                 // Read the stream message
-                boost::asio::streambuf stream_buf;
-                boost::asio::read(m_ssl_socket, stream_buf, boost::asio::transfer_exactly(2219));
-                std::stringstream ss;
-                ss << &stream_buf;
-                std::string message = ss.str();
+                std::vector<char> message_buffer;
+                std::size_t message_size = 0;
+                std::size_t read_size = 0;
+
+                // Read the first two bytes of the frame header
+                std::vector<char> header(2);
+                boost::asio::read(m_ssl_socket, boost::asio::buffer(header), boost::asio::transfer_exactly(2));
+
+                // Extract the opcode and payload length from the header
+                bool fin = (header[0] & 0x80) != 0;
+                int opcode = header[0] & 0x0F;
+                bool mask = (header[1] & 0x80) != 0;
+                std::size_t payload_length = header[1] & 0x7F;
+
+                // Handle extended payload lengths
+                if (payload_length == 126) {
+                    std::vector<char> extended_payload_length(2);
+                    boost::asio::read(m_ssl_socket, boost::asio::buffer(extended_payload_length), boost::asio::transfer_exactly(2));
+                    payload_length = ntohs(*reinterpret_cast<uint16_t*>(&extended_payload_length[0]));
+                } else if (payload_length == 127) {
+                    std::vector<char> extended_payload_length(8);
+                    boost::asio::read(m_ssl_socket, boost::asio::buffer(extended_payload_length), boost::asio::transfer_exactly(8));
+                    payload_length = be64toh(*reinterpret_cast<uint64_t*>(&extended_payload_length[0]));
+                }
+
+                // Read the masking key if present
+                std::vector<char> masking_key;
+                if (mask) {
+                    masking_key.resize(4);
+                    boost::asio::read(m_ssl_socket, boost::asio::buffer(masking_key), boost::asio::transfer_exactly(4));
+                }
+
+                // Read the payload
+                while (read_size < payload_length) {
+                    std::vector<char> chunk(std::min<std::size_t>(payload_length - read_size, 1024));
+                    std::size_t chunk_size = boost::asio::read(m_ssl_socket, boost::asio::buffer(chunk), boost::asio::transfer_at_least(1));
+                    read_size += chunk_size;
+
+                    // Unmask the payload if necessary
+                    if (mask) {
+                        for (std::size_t i = 0; i < chunk_size; ++i) {
+                            chunk[i] = chunk[i] ^ masking_key[i % 4];
+                        }
+                    }
+
+                    message_buffer.insert(message_buffer.end(), chunk.begin(), chunk.end());
+                }
+
+                // Convert the message buffer to a string
+                std::string message(message_buffer.begin(), message_buffer.end());
 
                 // Print the message
                 std::cout << "Stream message: " << message << std::endl << std::endl << std::endl << std::endl;
@@ -77,6 +122,7 @@ public:
             throw;
         }
     }
+
 
 
 private:
