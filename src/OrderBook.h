@@ -5,9 +5,11 @@
 #ifndef MY_PROJECT_ORDERBOOK_H
 #define MY_PROJECT_ORDERBOOK_H
 
+#include "SSLClient.h"
 
 class OrderBook {
-
+    
+private:
 };
 
 
