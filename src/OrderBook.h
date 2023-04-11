@@ -27,18 +27,21 @@ public:
 
     void run_forever(std::string &message);
 
-    std::string depth_snapshot();
+    static std::string depth_snapshot();
 
     void process_data();
     
     void buffer_data();
 
 private:
-    std::vector<Level> ask;
-    std::vector<Level> bid;
+    std::vector<Level> asks;
+    std::vector<Level> bids;
+    std::uint64_t lastUpdateId;
     std::unique_ptr<SSLClient> ssl_client;
     
     std::vector<Level> parse_json(std::string json);
+
+    void populate_levels(const std::string &json_str);
 };
 
 

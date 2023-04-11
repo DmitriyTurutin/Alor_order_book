@@ -1,30 +1,58 @@
 #include "OrderBook.h"
 #include "../libs/json.hpp"
+#include <string>
 
 using json = nlohmann::json;
 
-OrderBook::OrderBook()
-        : ssl_client(std::make_unique<SSLClient>("fstream.binance.com","443")) {
-    
-    ssl_client->connect();
-    std::string json_str =  depth_snapshot();
+void OrderBook::populate_levels(const std::string &json_str) {
     auto json = json::parse(json_str);
-    
-    std::cout << json_str << std::endl;
-    auto last_update_id = json["lastUpdateId"];
-    
-    std::cout << "Last update id: " << last_update_id << std::endl << std::endl;
+
+    // Parse the bids levels 
+    auto bid_levels = json["bids"];
+    for (auto &level: bid_levels) {
+        double price = std::stod(level[0].get<std::string>());
+        double amount = std::stod(level[1].get<std::string>());
+        bids.push_back({price, amount});
+    }
+
+    // Parse the asks levels 
+    auto ask_levels = json["asks"];
+    for (auto &level: ask_levels) {
+        double price = std::stod(level[0].get<std::string>());
+        double amount = std::stod(level[1].get<std::string>());
+        asks.push_back({price, amount});
+    }
 }
 
-void OrderBook::run_forever(std::string& message) {
+OrderBook::OrderBook()
+        : ssl_client(std::make_unique<SSLClient>("fstream.binance.com", "443")) {
+
+    ssl_client->connect();
+    std::string json_str = depth_snapshot();
+    auto json = json::parse(json_str);
+
+//    std::cout << json_str << std::endl;
+    this->lastUpdateId = json["lastUpdateId"];
+
+    populate_levels(json_str);
+
+    for (auto &bid: bids) {
+        std::cout << "[ " << bid.amount << ", " << bid.price << " ]" << ",\n";
+    }
+    std::cout << "\n\n";
+    for (auto &ask: asks) {
+        std::cout << "[ " << ask.amount << ", " << ask.price << " ]" << ",\n";
+    }
+
+
+    std::cout << "Last update id: " << lastUpdateId << std::endl << std::endl;
+}
+
+void OrderBook::run_forever(std::string &message) {
     ssl_client->request(message);
     while (true) {
         std::cout << ssl_client->read_stream() << std::endl << std::endl;
     }
-}
-
-std::vector<OrderBook::Level> OrderBook::parse_json(std::string json) {
-    return std::vector<OrderBook::Level>();
 }
 
 std::string OrderBook::depth_snapshot() {
@@ -44,7 +72,7 @@ std::string OrderBook::depth_snapshot() {
 
     // Send an HTTPS GET request with the query parameters
     std::string request =
-            "GET /fapi/v1/depth?symbol=BTCUSDT&limit=10 HTTP/1.1\r\n"
+            "GET /fapi/v1/depth?symbol=BTCUSDT&limit=1000 HTTP/1.1\r\n"
             "Host: fapi.binance.com\r\n"
             "Accept: */*\r\n"
             "Connection: close\r\n"
