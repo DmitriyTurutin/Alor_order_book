@@ -6,7 +6,7 @@ project(${This} C CXX)
 
 # C/C++ standards
 set(CMAKE_C_STANDARD 99)
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_POSITION_INDEPENDENT_CODE)
 
 # Enable testing
