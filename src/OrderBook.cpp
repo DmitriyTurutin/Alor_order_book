@@ -8,6 +8,7 @@ OrderBook::OrderBook()
         : ssl_client(std::make_unique<SSLClient>("fstream.binance.com","443")) {
     
     ssl_client->connect();
+    depth_snapshot();
 }
 
 void OrderBook::run_forever(std::string& message) {
@@ -17,9 +18,23 @@ void OrderBook::run_forever(std::string& message) {
     }
 }
 
-void OrderBook::get_depth_snapshot() {
+std::vector<OrderBook::Level> OrderBook::parse_json(std::string json) {
+}
+
+void OrderBook::depth_snapshot() {
+    // Send get request to https://fapi.binance.com/fapi/v1/depth?symbol=BTCUSDT&limit=1000
+    // Create context
+    using boost::asio::ip::tcp;
+    
+    boost::asio::io_context io_context;
+
+    // Resolve the hostname
+    tcp::resolver resolver(io_context);
+    tcp::resolver::results_type endpoints =
+            resolver.resolve("fapi.binance.com", "80");
 
 }
+
 
 
 

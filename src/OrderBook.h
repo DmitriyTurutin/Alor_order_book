@@ -6,6 +6,7 @@
 #define MY_PROJECT_ORDERBOOK_H
 
 #include "SSLClient.h"
+#include <boost/asio.hpp>
 #include <iostream>
 
 // TODO: 1. buffer from websocket stream
@@ -14,7 +15,7 @@
 // TODO: 4. The first processed event should have U <= lastUpdateId AND u >= lastUpdateId
 // TODO: 5. While listening to the stream, each new event's pu should be equal to the previous event's u, otherwise initialize the process from step 2. 
 // TODO: 6 If quantity 0 remove the price level
-
+// TODO: 7. rewrite to use DI, inject ISSLClient
 class OrderBook {
 public:
     struct Level {
