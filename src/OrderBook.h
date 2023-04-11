@@ -27,7 +27,7 @@ public:
 
     void run_forever(std::string &message);
 
-    void depth_snapshot();
+    std::string depth_snapshot();
 
     void process_data();
     

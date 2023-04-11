@@ -1,7 +1,3 @@
-//
-// Created by gnome on 4/10/23.
-//
-
 #include "OrderBook.h"
 
 OrderBook::OrderBook()
@@ -21,7 +17,7 @@ void OrderBook::run_forever(std::string& message) {
 std::vector<OrderBook::Level> OrderBook::parse_json(std::string json) {
 }
 
-void OrderBook::depth_snapshot() {
+std::string OrderBook::depth_snapshot() {
     // Send get request to https://fapi.binance.com/fapi/v1/depth?symbol=BTCUSDT&limit=1000
     // Create context
     using boost::asio::ip::tcp;
@@ -31,8 +27,23 @@ void OrderBook::depth_snapshot() {
     // Resolve the hostname
     tcp::resolver resolver(io_context);
     tcp::resolver::results_type endpoints =
-            resolver.resolve("fapi.binance.com", "80");
+        resolver.resolve("example.com", "http");
 
+    // Connect to the server
+    tcp::socket socket(io_context);
+    boost::asio::connect(socket, endpoints);
+
+    // Send the HTTP request
+    boost::asio::streambuf request;
+    std::ostream request_stream(&request);
+    request_stream << "GET /index.html HTTP/1.1\r\n"
+                   << "Host: example.com\r\n"
+                   << "Connection: close\r\n\r\n";
+    boost::asio::write(socket, request);
+
+
+    return std::string();
+    
 }
 
 

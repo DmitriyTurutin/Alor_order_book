@@ -27,6 +27,11 @@
 *.a
 *.lib
 
+.vscode
+/https
+/http
+/build
+
 # Executables
 *.exe
 *.out
