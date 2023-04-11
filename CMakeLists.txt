@@ -15,7 +15,8 @@ enable_testing()
 # Headers
 set(Headers
         src/OrderBook.h
-        src/SSLClient.h)
+        src/SSLClient.h
+        libs/json.hpp)
 # Source files 
 set(Sources
         src/OrderBook.cpp
@@ -24,7 +25,7 @@ set(Sources
 # Set Boost directories
 set(BOOST_ROOT "/usr/local")
 set(Boost_INCLUDE_DIRS "${BOOST_ROOT}/include")
-set(Boost_LIBRARIES "${BOOST_ROOT}/lib/libboost_system.a" "${BOOST_ROOT}/lib/libboost_filesystem.a")
+set(Boost_LIBRARIES "${BOOST_ROOT}/lib/libboost_system.a" "${BOOST_ROOT}/lib/libboost_filesystem.a" "${BOOST_ROOT}/lib/libboost_json.a")
 
 # Set OpenSSL directories
 set(OPENSSL_ROOT_DIR "/usr")

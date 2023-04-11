@@ -1,10 +1,19 @@
 #include "OrderBook.h"
+#include "../libs/json.hpp"
+
+using json = nlohmann::json;
 
 OrderBook::OrderBook()
         : ssl_client(std::make_unique<SSLClient>("fstream.binance.com","443")) {
     
     ssl_client->connect();
-    std::cout << depth_snapshot();
+    std::string json_str =  depth_snapshot();
+    auto json = json::parse(json_str);
+    
+    std::cout << json_str << std::endl;
+    auto last_update_id = json["lastUpdateId"];
+    
+    std::cout << "Last update id: " << last_update_id << std::endl << std::endl;
 }
 
 void OrderBook::run_forever(std::string& message) {
