@@ -11,5 +11,3 @@ TEST(SSLClientTest, RequestTest) {
     std::string response = client.request("GET / HTTP/1.1\r\nHost: www.example.com\r\n\r\n");
     ASSERT_FALSE(response.empty());
 }
-
-TEST(SSLClientTest, )

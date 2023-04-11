@@ -1,12 +1,9 @@
-//
-// Created by gnome on 4/10/23.
-//
-
 #include "SSLClient.h"
 #include <iostream>
+#include <utility>
 
-SSLClient::SSLClient(const std::string &host, const std::string &port)
-        : m_host(host), m_port(port), m_ssl_context(boost::asio::ssl::context::tlsv12_client) {
+SSLClient::SSLClient(std::string host, std::string port)
+        : m_host(std::move(host)), m_port(std::move(port)), m_ssl_context(boost::asio::ssl::context::tlsv12_client) {
     // Set up the SSL context
     m_ssl_context.set_default_verify_paths();
     m_ssl_context.set_verify_mode(boost::asio::ssl::verify_peer);
@@ -54,22 +51,16 @@ std::string SSLClient::request(const std::string &message) {
     }
 }
 
-// TODO: Handle response from stream
-std::string SSLClient::read_stream() {
-    std::vector<char> message_buffer;
-    std::size_t message_size = 0;
-    std::size_t read_size = 0;
-
+std::tuple<std::size_t, bool> SSLClient::get_payload_length() {
     // Read the first two bytes of the frame header 
     std::vector<char> header(2);
     boost::asio::read(m_ssl_socket, boost::asio::buffer(header), boost::asio::transfer_exactly(2));
 
-    // Extract the opcode and payload lenght from the header 
-    bool fin = (header[0] & 0x80) != 0;
-    int opcode = header[0] & 0x0F;
+    // Extract the opcode and payload length from the header 
+//    bool fin = (header[0] & 0x80) != 0;
+//    int opcode = header[0] & 0x0F;
     bool mask = (header[1] & 0x80) != 0;
     std::size_t payload_length = header[1] & 0x7F;
-
 
     // Handle extended payload lengths
     if (payload_length == 126) {
@@ -84,14 +75,21 @@ std::string SSLClient::read_stream() {
         payload_length = be64toh(*reinterpret_cast<uint64_t *>(&extended_payload_length[0]));
     }
 
-    // Read the masking key if present
+    return std::make_tuple(payload_length, mask);
+}
+
+std::vector<char> SSLClient::read_masking_key(bool mask) {
     std::vector<char> masking_key;
     if (mask) {
         masking_key.resize(4);
         boost::asio::read(m_ssl_socket, boost::asio::buffer(masking_key), boost::asio::transfer_exactly(4));
     }
+    return masking_key;
+}
 
-    // Read the payload
+std::vector<char> SSLClient::raed_payload(std::size_t payload_length, bool mask, std::vector<char> &masking_key) {
+    std::vector<char> message_buffer;
+    std::size_t read_size = 0;
     while (read_size < payload_length) {
         std::vector<char> chunk(std::min<std::size_t>(payload_length - read_size, 1024));
         std::size_t chunk_size = boost::asio::read(m_ssl_socket, boost::asio::buffer(chunk),
@@ -107,7 +105,20 @@ std::string SSLClient::read_stream() {
 
         message_buffer.insert(message_buffer.end(), chunk.begin(), chunk.end());
     }
+    return message_buffer;
+}
 
+// TODO: Handle response from stream
+std::string SSLClient::read_stream() {
+    // Get payload length
+    std::tuple<std::size_t, bool> mask_payload = get_payload_length();
+    bool mask = std::get<1>(mask_payload);
+    std::size_t payload_length = std::get<0>(mask_payload);
+
+    // Read the masking key if present
+    auto masking_key = read_masking_key(mask);
+    // Read the payload
+    std::vector<char> message_buffer = raed_payload(payload_length, mask, masking_key);
     // Convert the message buffer to a string
     std::string message(message_buffer.begin(), message_buffer.end());
 
@@ -115,9 +126,7 @@ std::string SSLClient::read_stream() {
     return message;
 }
 
-std::pair<int, std::size_t> SSLClient::read_header() {
-    return std::pair<int, std::size_t>();
-}
+
 //    std::string get_depth_snapshot() {
 //        try {
 //            // Create a TCP resolver and connect to the server
