@@ -1,6 +1,5 @@
 #include <iostream>
 #include "OrderBook.h"
-#include "SSLClient.h"
 
 int main() {
 

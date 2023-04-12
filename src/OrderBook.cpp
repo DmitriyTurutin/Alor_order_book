@@ -1,5 +1,4 @@
 #include "OrderBook.h"
-#include "../libs/json.hpp"
 #include <string>
 
 using json = nlohmann::json;
@@ -12,7 +11,7 @@ void OrderBook::populate_levels(const std::string &json_str) {
     for (auto &level: bid_levels) {
         double price = std::stod(level[0].get<std::string>());
         double amount = std::stod(level[1].get<std::string>());
-        bids.push_back({price, amount});
+        asks.push_back({price, amount});
     }
 
     // Parse the asks levels 
@@ -31,11 +30,11 @@ OrderBook::OrderBook()
     std::string json_str = depth_snapshot();
     auto json = json::parse(json_str);
 
-//    std::cout << json_str << std::endl;
     this->lastUpdateId = json["lastUpdateId"];
 
     populate_levels(json_str);
-
+    
+    // Print levels 
     for (auto &bid: bids) {
         std::cout << "[ " << bid.amount << ", " << bid.price << " ]" << ",\n";
     }
@@ -44,7 +43,7 @@ OrderBook::OrderBook()
         std::cout << "[ " << ask.amount << ", " << ask.price << " ]" << ",\n";
     }
 
-
+    // Print last update id
     std::cout << "Last update id: " << lastUpdateId << std::endl << std::endl;
 }
 
@@ -60,6 +59,7 @@ std::string OrderBook::depth_snapshot() {
     boost::asio::io_context io_context;
 
     // Resolve the hostname and port
+    // TODO: refactor, change to use SSLRestClient class inherited from SSLClient interface
     tcp::resolver resolver(io_context);
     tcp::resolver::results_type endpoints =
             resolver.resolve("fapi.binance.com", "443");

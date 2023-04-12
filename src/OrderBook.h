@@ -8,6 +8,9 @@
 #include "SSLClient.h"
 #include <boost/asio.hpp>
 #include <iostream>
+#include "../libs/json.hpp"
+
+using json = nlohmann::json;
 
 // TODO: 1. buffer from websocket stream
 // TODO: 2. get depth snapshot 
@@ -39,7 +42,7 @@ private:
     std::uint64_t lastUpdateId;
     std::unique_ptr<SSLClient> ssl_client;
     
-    std::vector<Level> parse_json(std::string json);
+    std::vector<Level> parse_json(json json);
 
     void populate_levels(const std::string &json_str);
 };
